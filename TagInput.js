@@ -1,8 +1,6 @@
 let inputs = [...document.getElementsByClassName("tag-input")];
 let tags = [];
 
-console.log(inputs)
-console.log(typeof inputs)
 
 inputs.forEach(element => {
     ConvertToTagInput(element);
@@ -18,33 +16,55 @@ function ConvertToTagInput(element) {
 
 
     element.style.display = "none";
-    let parentElement = element.parentNode;
+    let parentElement = element.parentElement;
 
-    parentElement.insertAdjacentHTML('beforeend',
-        `<ul class="tag-input-list"><input class="tag-input-text" placeholder="${element.placeholder}" onkeyup="AddTag(event,this)"/></ul>`);
+    CreateUiElements(parentElement, element);
+
 }
 
+// create ui elements and return the created elements
+function CreateUiElements(parentElement, baseElement) {
+    let list = document.createElement("ul");
+    list.classList.add("tag-input-list");
+    let input = document.createElement("input");
+    input.type = "text";
+    input.classList.add("tag-input-text");
+    input.placeholder = baseElement.placeholder;
+    input.addEventListener('keyup', function (event) { AddTag(event, this, baseElement) });
+    list.appendChild(input);
 
-function AddTag(event, element) {
+    parentElement.appendChild(list);
+    GetDefaultValue(baseElement, list);
+}
+
+function GetDefaultValue(baseElement, listContainer) {
+    let defaultTags = baseElement.getAttribute("data-default-tags");
+
+    if (defaultTags !== null && defaultTags.trim().length > 0) {
+        defaultTags.replace(/\s+/g, ' ').split(",").forEach(tag => tags.push(tag.trim()));
+        UpdateTagsUiList(tags, listContainer, baseElement);
+    }
+}
+
+function AddTag(event, tagInput, baseElement) {
     if (event.key == 'Enter') {
-        let inputTag = element.value.replace(/\s+/g, ' ').trim();
+        let inputTag = tagInput.value.replace(/\s+/g, ' ').trim();
 
         if (inputTag.length > 0) {
             inputTag.split(",").forEach(tag => {
                 if (!tags.includes(tag)) {
                     tags.push(tag);
-                    UpdateTagsUiList(tags, element);
+                    UpdateTagsUiList(tags, tagInput.parentElement, baseElement);
                 }
             })
-
         }
 
-        element.value = "";
+        tagInput.value = "";
     }
 }
 
-function ValidateElement(element) {
-    let tagName = element.tagName.toLowerCase();
+function ValidateElement(inputElement) {
+    let tagName = inputElement.tagName.toLowerCase();
     if (tagName === 'input' || tagName === 'textarea') {
         return true;
     }
@@ -53,20 +73,31 @@ function ValidateElement(element) {
     }
 }
 
-function RemoveTag(element) {
-    const index = tags.indexOf(element.getAttribute("data-remove-text"));
+function RemoveTag(tag, baseElement) {
+    const index = tags.indexOf(tag.getAttribute("data-remove-text"));
     if (index > -1) {
         tags = [...tags.slice(0, index), ...tags.slice(index + 1)];
     }
-    UpdateTagsUiList(tags, element.parentElement);
+    UpdateTagsUiList(tags, tag.parentElement.parentElement, baseElement);
 }
 
-function UpdateTagsUiList(tagList, element) {
-    let parentElement = element.parentElement;
-    parentElement.querySelectorAll("li").forEach(element => element.remove());
-
+function UpdateTagsUiList(tagList, containerList, baseElement) {
+    containerList.querySelectorAll("li").forEach(element => element.remove());
+    console.log(baseElement.value)
+    baseElement.value = tagList.join(',');
     tagList.slice().reverse().forEach(tag => {
-        parentElement.insertAdjacentHTML("afterbegin",
-            `<li class="input-tag-item"><span class="input-tag-text-container">${tag}</span><span class="input-tag-remove-btn" onclick="RemoveTag(this)" data-remove-text="${tag}">&#10005;<span></li>`);
+        let listItem = document.createElement("li");
+        listItem.classList.add("input-tag-item");
+        let tagText = document.createElement("span");
+        tagText.classList.add("input-tag-text-container");
+        tagText.appendChild(document.createTextNode(tag));
+        let removeBtn = document.createElement("span");
+        removeBtn.innerHTML = "&#10005;";
+        removeBtn.classList.add("input-tag-remove-btn");
+        removeBtn.addEventListener("click", function () { RemoveTag(this, baseElement) });
+        removeBtn.setAttribute("data-remove-text", tag);
+        listItem.appendChild(tagText);
+        listItem.appendChild(removeBtn);
+        containerList.insertBefore(listItem, containerList.firstChild);
     });
 }
