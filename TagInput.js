@@ -1,5 +1,4 @@
 let inputs = [...document.getElementsByClassName("tag-input")];
-let tags = [];
 
 
 inputs.forEach(element => {
@@ -38,7 +37,8 @@ function CreateUiElements(parentElement, baseElement) {
 }
 
 function GetDefaultValue(baseElement, listContainer) {
-    let defaultTags = baseElement.getAttribute("data-default-tags");
+    let tags = [];
+    let defaultTags = baseElement.value;
 
     if (defaultTags !== null && defaultTags.trim().length > 0) {
         defaultTags.replace(/\s+/g, ' ').split(",").forEach(tag => tags.push(tag.trim()));
@@ -49,7 +49,8 @@ function GetDefaultValue(baseElement, listContainer) {
 function AddTag(event, tagInput, baseElement) {
     if (event.key == 'Enter') {
         let inputTag = tagInput.value.replace(/\s+/g, ' ').trim();
-
+        let tags = baseElement.value.trim().split(',')
+            .filter(ar => (ar.trim().length > 0 && ar !== undefined && ar !== null));
         if (inputTag.length > 0) {
             inputTag.split(",").forEach(tag => {
                 if (!tags.includes(tag)) {
@@ -74,6 +75,8 @@ function ValidateElement(inputElement) {
 }
 
 function RemoveTag(tag, baseElement) {
+    let tags = baseElement.value.trim().split(',')
+        .filter(ar => (ar.trim().length > 0 && ar !== undefined && ar !== null));
     const index = tags.indexOf(tag.getAttribute("data-remove-text"));
     if (index > -1) {
         tags = [...tags.slice(0, index), ...tags.slice(index + 1)];
@@ -83,7 +86,6 @@ function RemoveTag(tag, baseElement) {
 
 function UpdateTagsUiList(tagList, containerList, baseElement) {
     containerList.querySelectorAll("li").forEach(element => element.remove());
-    console.log(baseElement.value)
     baseElement.value = tagList.join(',');
     tagList.slice().reverse().forEach(tag => {
         let listItem = document.createElement("li");
