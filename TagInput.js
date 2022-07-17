@@ -2,7 +2,7 @@ let inputs = [...document.getElementsByClassName("tag-input")];
 
 document.addEventListener("keydown", function (event) {
     if (event.key == "Enter") {
-        return false;
+        event.preventDefault();
     }
 });
 
