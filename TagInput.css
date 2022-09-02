@@ -1,3 +1,11 @@
+:root {
+    --main-black: #000000;
+    --main-gray: #ced4da;
+    --main-text-color: #6c757d;
+    --white-text-color: #fafafa;
+    --blue-background: #2196f3;
+}
+
 /* <-----list----> */
 .tag-input-list {
     display: flex;
@@ -5,10 +13,10 @@
     flex-wrap: wrap;
     list-style-type: none;
     padding: 0.6rem 0.75rem;
-    color: #6c757d;
+    color: var(--main-text-color);
     background-color: #fff;
     background-clip: padding-box;
-    border: 1px solid #ced4da;
+    border: 1px solid var(--main-gray);
     border-radius: 0.25rem;
     width: 100%;
     height: 100px;
@@ -19,15 +27,17 @@
 
 .input-tag-item {
     padding: 0.2rem 0;
-    background-color: #2196f3;
-    color: #fafafa;
+    background-color: var(--blue-background);
+    color: var(--white-text-color);
     border-radius: 0.25rem;
     margin: 0.1rem;
     text-align: center;
 }
-.input-tag-text-container{
+
+.input-tag-text-container {
     margin: 0 7px;
 }
+
 .input-tag-remove-btn {
     padding: 5px 5px;
     border-radius: 100%;
@@ -35,11 +45,52 @@
 }
 
 /* <-----input----> */
+.tag-input-input-container {
+    position: relative;
+    margin: 0.1rem;
+    padding: 0;
+    flex: 1;
+}
+
 .tag-input-text {
     padding: 0.2rem 0.3rem;
-    margin: 0.1rem;
     background-color: transparent;
     border: none;
     outline: none;
-    flex: 1;
+    width: 100%;
+}
+
+.auto-complete-list {
+    position: absolute;
+    list-style-type: none;
+    background-color: var(--white-text-color);
+    border-radius: 10px;
+    box-shadow: 0 1rem 3rem rgba(0, 0, 0, .175) !important;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.auto-complete-list-item {
+    border-bottom: 1px solid var(--main-gray);
+    background-color: var(--white-text-color);
+    font-size: 1.2rem;
+    color: var(--main-black);
+    margin: 0;
+    padding: 0;
+}
+
+.auto-complete-list-item button {
+    background-color: transparent;
+    text-align: inherit;
+    border: none;
+    width: 100%;
+    padding: 0.7rem;
+    height: 100%;
+}
+
+.active-auto-complete-item {
+    background-color: var(--main-gray) !important;
 }

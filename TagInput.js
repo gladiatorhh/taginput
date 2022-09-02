@@ -23,22 +23,46 @@ function ConvertToTagInput(element) {
     let parentElement = element.parentElement;
 
     CreateUiElements(parentElement, element);
-
 }
 
 // create ui elements and return the created elements
-function CreateUiElements(parentElement, baseElement) {
+function CreateUiElements(parentElement, baseInput) {
+
+    let ajaxAutoCompleteUrl = baseInput.getAttribute('data-auto-complete-url');
+
     let list = document.createElement("ul");
     list.classList.add("tag-input-list");
+
+    let inputContainer = document.createElement("div");
+    inputContainer.classList.add("tag-input-input-container");
+
     let input = document.createElement("input");
     input.type = "text";
     input.classList.add("tag-input-text");
-    input.placeholder = baseElement.placeholder;
-    input.addEventListener('keyup', function (event) { AddTag(event, this, baseElement) });
-    list.appendChild(input);
+    input.placeholder = baseInput.placeholder;
+
+    inputContainer.appendChild(input);
+    let autoComplete;
+    if (ajaxAutoCompleteUrl != undefined && ajaxAutoCompleteUrl.trim().length > 0) {
+        autoComplete = document.createElement("ul");
+        autoComplete.classList.add("auto-complete-list");
+        inputContainer.appendChild(autoComplete);
+    }
+
+    input.addEventListener('keyup', function (event) {
+        AddTag(event, this, baseInput);
+        if (ajaxAutoCompleteUrl != undefined && ajaxAutoCompleteUrl.trim().length > 0) {
+            if (event.keyCode != 40 && event.keyCode != 38) {
+                AutoComplete(this, ajaxAutoCompleteUrl.trim());
+            }
+            NavigateAutoComplete(event, this);
+        }
+    });
+
+    list.appendChild(inputContainer);
 
     parentElement.appendChild(list);
-    GetDefaultValue(baseElement, list);
+    GetDefaultValue(baseInput, list);
 }
 
 function GetDefaultValue(baseElement, listContainer) {
@@ -60,7 +84,7 @@ function AddTag(event, tagInput, baseElement) {
             inputTag.split(",").forEach(tag => {
                 if (!tags.includes(tag)) {
                     tags.push(tag);
-                    UpdateTagsUiList(tags, tagInput.parentElement, baseElement);
+                    UpdateTagsUiList(tags, tagInput.parentElement.parentElement, baseElement);
                 }
             })
         }
@@ -92,19 +116,101 @@ function RemoveTag(tag, baseElement) {
 function UpdateTagsUiList(tagList, containerList, baseElement) {
     containerList.querySelectorAll("li").forEach(element => element.remove());
     baseElement.value = tagList.join(',');
+    let listItem;
+    let tagText;
+    let removeBtn;
     tagList.slice().reverse().forEach(tag => {
-        let listItem = document.createElement("li");
+        listItem = document.createElement("li");
         listItem.classList.add("input-tag-item");
-        let tagText = document.createElement("span");
+
+        tagText = document.createElement("span");
         tagText.classList.add("input-tag-text-container");
         tagText.appendChild(document.createTextNode(tag));
-        let removeBtn = document.createElement("span");
+
+        removeBtn = document.createElement("span");
         removeBtn.innerHTML = "&#10005;";
         removeBtn.classList.add("input-tag-remove-btn");
         removeBtn.addEventListener("click", function () { RemoveTag(this, baseElement) });
         removeBtn.setAttribute("data-remove-text", tag);
+
         listItem.appendChild(tagText);
         listItem.appendChild(removeBtn);
+
         containerList.insertBefore(listItem, containerList.firstChild);
     });
+}
+
+
+async function AutoComplete(currentInput, url) {
+    let response = await fetch(url + "?search=" + currentInput.value.trim())
+        .then(response => response.json())
+        .then(json => json);
+
+    if (currentInput.value.trim().length === 0)
+        response = [];
+
+    FillAutoComplete(response, currentInput);
+}
+
+function FillAutoComplete(data, input) {
+    let htmlList = data.map(object =>
+        `<li class="auto-complete-list-item"><button type="button" onclick="FillTag(this,'${object}')">${object}</button></li>`)
+        .join("");
+
+    input.parentElement.lastChild.innerHTML = htmlList;
+}
+
+function FillTag(element, text) {
+    element.parentElement.parentElement.parentElement.firstChild.value = text;
+}
+
+function NavigateAutoComplete(baseEvent, input) {
+    let autoCompleteItems = Array.from(input.parentElement.lastChild.children);
+    let elementCount = autoCompleteItems.length;
+
+    let activeElement = autoCompleteItems.findIndex(e => e.classList.contains("active-auto-complete-item"));
+    switch (baseEvent.keyCode) {
+        case 40:
+            if (activeElement !== -1) {
+                autoCompleteItems[activeElement].classList.remove("active-auto-complete-item");
+                autoCompleteItems[activeElement].querySelector('button').removeEventListener("keydown", null);
+            }
+
+            if ((activeElement + 1) === elementCount) {
+                activeElement = 0;
+            }
+
+            autoCompleteItems[activeElement + 1].classList.add("active-auto-complete-item");
+            autoCompleteItems[activeElement + 1].querySelector('button').focus();
+            autoCompleteItems[activeElement + 1].querySelector('button').addEventListener("keydown", (event) => {
+                if (event.key === "Enter") {
+                    FillTag(autoCompleteItems[activeElement + 1].querySelector('button'), autoCompleteItems[activeElement + 1].querySelector('button').innerText);
+                }
+                input.focus();
+            });
+            break;
+
+        case 38:
+            if (activeElement > 0) {
+                autoCompleteItems[activeElement].classList.remove("active-auto-complete-item");
+                autoCompleteItems[activeElement].querySelector('button').removeEventListener("keydown", null);
+
+                if (activeElement > 0) {
+
+                    autoCompleteItems[activeElement - 1].classList.add("active-auto-complete-item");
+                    autoCompleteItems[activeElement - 1].querySelector('button').focus();
+                    autoCompleteItems[activeElement - 1].querySelector('button').addEventListener("keydown", (event) => {
+                        if (event.key === "Enter") {
+                            FillTag(this, this.value);
+                        }
+                        input.focus();
+                    });
+                }
+            }
+
+            if ((activeElement + 1) === elementCount) {
+                activeElement = 0;
+            }
+            break;
+    }
 }
