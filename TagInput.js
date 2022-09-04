@@ -161,7 +161,10 @@ function FillAutoComplete(data, input) {
 }
 
 function FillTag(element, text) {
-    element.parentElement.parentElement.parentElement.firstChild.value = text;
+    let mainInput = element.parentElement.parentElement.parentElement.firstChild;
+    mainInput.value = text;
+    mainInput.focus();
+    mainInput.dispatchEvent(new KeyboardEvent('keyup', { 'key': 'Enter' }));
 }
 
 function NavigateAutoComplete(baseEvent, input) {
