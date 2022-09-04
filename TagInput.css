@@ -61,6 +61,7 @@
 }
 
 .auto-complete-list {
+    z-index: 999;
     position: absolute;
     list-style-type: none;
     background-color: var(--white-text-color);
